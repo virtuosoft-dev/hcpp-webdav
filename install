@@ -1,0 +1,10 @@
+#!/bin/bash
+export DEBIAN_FRONTEND=noninteractive
+
+############################################ 
+# Install Apache WebDAV modules
+############################################
+apt install -y libapache2-mod-webdav
+
+# Notify installation has finished
+/usr/local/hestia/bin/v-add-user-notification admin NodeApp "<span style=\"font-size:x-large;\">&#128194;</span> WebDAV plugin has finished installing."
