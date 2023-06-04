@@ -35,10 +35,10 @@ touch "/usr/local/hestia/data/hcpp/installed/webdav"
 This plugin will create a new domain for each HestiaCP user with the naming convention:
 
 ```
-webdav-&gt;username&lt;.domain.tld
+webdav-username.domain.tld
 ```
 
-Where &gt;username&lt is the username of the HestiaCP user account and domain.tld is the domain for the HestiaCP instance.
+Where `username` is the username of the HestiaCP user account and domain.tld is the domain for the HestiaCP instance.
 
 
   
