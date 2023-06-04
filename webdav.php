@@ -20,8 +20,29 @@ if ( ! class_exists( 'WebDAV') ) {
             global $hcpp;
             $hcpp->webdav = $this;
             $hcpp->add_action( 'priv_add_user', [ $this, 'priv_add_user'] );
-            $hcpp->add_action( 'priv_remove_user', [ $this, 'priv_remove_user'] );
+            $hcpp->add_action( 'priv_delete_user', [ $this, 'priv_delete_user'] );
             $hcpp->add_action( 'priv_unsuspend_domain', [ $this, 'priv_unsuspend_domain'] );
         }
+        
+        /**
+         *
+         */
+        public function priv_add_user() {
+            
+        }
+        
+        /**
+         *
+         */
+        public function priv_delete_user() {
+            
+        }
+        
+        /**
+         *
+         */
+        public function priv_unsuspend_domain() {
+            
+        } 
     }
 }
