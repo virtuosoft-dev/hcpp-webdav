@@ -38,7 +38,30 @@ This plugin will create a new domain for each HestiaCP user with the naming conv
 webdav-username.domain.tld
 ```
 
-Where `username` is the username of the HestiaCP user account and domain.tld is the domain for the HestiaCP instance.
+Where `username` is the username of the HestiaCP user account and `domain.tld` is the domain for the HestiaCP instance.
+
+## Extending HCPP-WebDAV via Pluginable Actions
+The following [hestiacp-pluginable](https://github.com/virtuosoft-dev/hestiacp-pluginable) actions are invoked when using
+the WebDAV. Developers can hook and implement their own WebDAV modifications using these actions:
+
+* **webdav_write_vhost** - *occurs before the Apache WebDAV vhost file is written.*
+* **webdav_write_nginx** - *occurs before the Apache WebDAV nginx file is written.* 
+ 
+
+## Support the creator
+You can help this author’s open source development endeavors by donating any amount to Stephen J. Carnam @ Virtuosoft. Your donation, no matter how large or small helps pay for essential time and resources to create MIT and GPL licensed projects that you and the world can benefit from. Click the link below to donate today :)
+<div>
+         
+
+[<kbd> <br> Donate to this Project <br> </kbd>][KBD]
 
 
-  
+</div>
+
+
+<!-—————————————————————————>
+
+[KBD]: https://virtuosoft.com/donate
+
+https://virtuosoft.com/donate
+
