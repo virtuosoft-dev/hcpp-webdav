@@ -2,9 +2,11 @@
 export DEBIAN_FRONTEND=noninteractive
 
 ############################################ 
-# Install Apache WebDAV modules
+# Enable Apache WebDAV modules
 ############################################
-apt install -y libapache2-mod-webdav
+a2enmod dav
+a2enmod dav_fs
+systemctl restart apache2.service
 
 # Notify installation has finished
-/usr/local/hestia/bin/v-add-user-notification admin NodeApp "<span style=\"font-size:x-large;\">&#128194;</span> WebDAV plugin has finished installing."
+/usr/local/hestia/bin/v-add-user-notification admin WebDAV "<span>&#128194;</span> WebDAV plugin has finished installing."
