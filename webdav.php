@@ -40,7 +40,7 @@ if ( ! class_exists( 'WebDAV') ) {
             return $args;
         }
         
-        // Setup WebDAV services for users
+        // Setup WebDAV services for user
         public function setup( $user ) {
             global $hcpp;
             $hostname = trim( $hcpp->delLeftMost( shell_exec( 'hostname -f' ), '.' ) );
@@ -66,7 +66,6 @@ if ( ! class_exists( 'WebDAV') ) {
             file_put_contents( $conf, $content );
 
 // TODO: WIP
-
 
             // Create the nginx.conf_nodeapp file.
             $conf = "/home/$user/conf/web/webdav-$user.$hostname/nginx.conf_nodeapp";
