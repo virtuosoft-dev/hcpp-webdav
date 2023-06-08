@@ -65,28 +65,8 @@ if ( ! class_exists( 'WebDAV') ) {
             );
             file_put_contents( $conf, $content );
 
-// TODO: WIP
-
-            // Create the nginx.conf_nodeapp file.
-            $conf = "/home/$user/conf/web/webdav-$user.$hostname/nginx.conf_nodeapp";
-            $content = file_get_contents( __DIR__ . '/conf-web/nginx.conf_nodeapp' );
-            file_put_contents( $conf, $content );
-
-            // Allocate a port for the VSCode Server instance.
-            $hcpp->allocate_port( "vscode_port", $user, "vscode-$user.$hostname" );
-
-            // Create the nginx.forcessl.conf_ports file.
-            $conf = "/home/$user/conf/web/vscode-$user.$hostname/nginx.forcessl.conf_ports";
-            $content = file_get_contents( __DIR__ . '/conf-web/nginx.forcessl.conf_ports' );
-            $content = str_replace( 
-                ['%user%', '%hostname%'],
-                [$user, $hostname],
-                $content
-            );
-            file_put_contents( $conf, $content );
-
             // Create the NGINX configuration symbolic link.
-            $link = "/etc/nginx/conf.d/domains/vscode-$user.$hostname.conf";
+            $link = "/etc/nginx/conf.d/domains/webdav-$user.$hostname.conf";
             if ( ! is_link( $link ) ) {
                 symlink( "/home/$user/conf/web/vscode-$user.$hostname/nginx.conf", $link );
             }
