@@ -42,8 +42,7 @@ if ( ! class_exists( 'WebDAV') ) {
         public function setup( $user ) {
             global $hcpp;
             $hostname = trim( $hcpp->delLeftMost( shell_exec( 'hostname -f' ), '.' ) );
-            $conf = "/home/$user/conf/web/webdav-$user.$hostname/nginx.conf";
-
+            
             // Create the configuration folder
             if ( ! is_dir( "/home/$user/conf/web/webdav-$user.$hostname" ) ) {
                 mkdir( "/home/$user/conf/web/webdav-$user.$hostname" );
@@ -55,36 +54,53 @@ if ( ! class_exists( 'WebDAV') ) {
             );
 
             // Create the nginx.conf file.
+            $nginx_conf = "/home/$user/conf/web/webdav-$user.$hostname/nginx.conf";
             $content = file_get_contents( __DIR__ . '/conf-web/nginx.conf' );
             $content = str_replace( 
                 ['%ip%', '%user%', '%hostname%'],
                 [$ip, $user, $hostname],
                 $content
             );
-            file_put_contents( $conf, $content );
+            file_put_contents( $nginx_conf, $content );
 
             // // Create the nginx.ssl.conf file.
+            // $nginx_ssl_conf = "/home/$user/conf/web/webdav-$user.$hostname/nginx.ssl.conf";
             // $content = file_get_contents( __DIR__ . '/conf-web/nginx.ssl.conf' );
             // $content = str_replace( 
             //     ['%ip%', '%user%', '%hostname%'],
             //     [$ip, $user, $hostname],
             //     $content
             // );
-            // file_put_contents( $conf, $content );
+            // file_put_contents( $nginx_ssl_conf, $content );
+
+            // Create the apache.conf file.
+            $apache_conf = "/home/$user/conf/web/webdav-$user.$hostname/apache2.conf";
+            $content = file_get_contents( __DIR__ . '/conf-web/apache.conf' );
+            $content = str_replace(
+                ['%ip%', '%user%', '%hostname%'],
+                [$ip, $user, $hostname],
+                $content
+            );
+            file_put_contents( $apache_conf, $content );
 
             // Create the nginx.conf configuration symbolic links.
             $link = "/etc/nginx/conf.d/domains/webdav-$user.$hostname.conf";
             if ( ! is_link( $link ) ) {
-                symlink( "/home/$user/conf/web/webdev-$user.$hostname/nginx.conf", $link );
+                symlink( $nginx_conf, $link );
             }
 
             // // Create the nginx.ssl.conf configuration symbolic links.
             // $link = "/etc/nginx/conf.d/domains/webdav-$user.$hostname.ssl.conf";
             // if ( ! is_link( $link ) ) {
-            //     symlink( "/home/$user/conf/web/webdev-$user.$hostname/nginx.ssl.conf", $link );
+            //     symlink( $nginx_ssl_conf, $link );
             // }
-        }
 
+            // Create the apache.conf configuration symbolic links.
+            $link = "/etc/apache2/conf.d/domains/webdav-$user.$hostname.conf";
+            if ( ! is_link( $link ) ) {
+                symlink( $apache_conf, $link );
+            }
+        }
 
         // Delete the NGINX configuration reference and server when the user is deleted.
         public function priv_delete_user( $args ) {
@@ -96,6 +112,10 @@ if ( ! class_exists( 'WebDAV') ) {
                 unlink( $link );
             }
             $link = "/etc/nginx/conf.d/domains/webdav-$user.$hostname.ssl.conf";
+            if ( is_link( $link ) ) {
+                unlink( $link );
+            }
+            $link = "/etc/apache2/conf.d/domains/webdav-$user.$hostname.conf";
             if ( is_link( $link ) ) {
                 unlink( $link );
             }
