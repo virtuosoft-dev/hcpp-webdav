@@ -26,7 +26,6 @@ if ( ! class_exists( 'WebDAV') ) {
         
         // Trigger setup when domain is created.
         public function new_web_domain_ready( $args ) {
-            global $hcpp;
             $user = $args[0];
             $this->setup( $user );           
             return $args;
@@ -34,7 +33,6 @@ if ( ! class_exists( 'WebDAV') ) {
 
         // On domain unsuspend, re-run setup
         public function priv_unsuspend_domain( $args ) {
-            global $hcpp;
             $user = $args[0];
             $this->setup( $user );           
             return $args;
@@ -65,20 +63,26 @@ if ( ! class_exists( 'WebDAV') ) {
             );
             file_put_contents( $conf, $content );
 
-            // Create the NGINX configuration symbolic link.
+            // // Create the nginx.ssl.conf file.
+            // $content = file_get_contents( __DIR__ . '/conf-web/nginx.ssl.conf' );
+            // $content = str_replace( 
+            //     ['%ip%', '%user%', '%hostname%'],
+            //     [$ip, $user, $hostname],
+            //     $content
+            // );
+            // file_put_contents( $conf, $content );
+
+            // Create the nginx.conf configuration symbolic links.
             $link = "/etc/nginx/conf.d/domains/webdav-$user.$hostname.conf";
             if ( ! is_link( $link ) ) {
-                symlink( "/home/$user/conf/web/vscode-$user.$hostname/nginx.conf", $link );
+                symlink( "/home/$user/conf/web/webdev-$user.$hostname/nginx.conf", $link );
             }
 
-            // Start the VSCode Server instance
-            $cmd = "runuser -l $user -c \"cd /opt/vscode && source /opt/nvm/nvm.sh ; pm2 pid vscode-$user.$hostname\"";
-            if ( trim( shell_exec( $cmd ) ) === '' ) {
-                $cmd = "runuser -l $user -c \"cd /opt/vscode && source /opt/nvm/nvm.sh ; pm2 start vscode.config.js\"";
-                $hcpp->log( shell_exec( $cmd ) );
-            }else{
-                $this->update_token( $user );
-            }
+            // // Create the nginx.ssl.conf configuration symbolic links.
+            // $link = "/etc/nginx/conf.d/domains/webdav-$user.$hostname.ssl.conf";
+            // if ( ! is_link( $link ) ) {
+            //     symlink( "/home/$user/conf/web/webdev-$user.$hostname/nginx.ssl.conf", $link );
+            // }
         }
 
 
@@ -87,7 +91,11 @@ if ( ! class_exists( 'WebDAV') ) {
             global $hcpp;
             $user = $args[0];
             $hostname = trim( $hcpp->delLeftMost( shell_exec( 'hostname -f' ), '.' ) );
-            $link = "/etc/nginx/conf.d/domains/vscode-$user.$hostname.conf";
+            $link = "/etc/nginx/conf.d/domains/webdav-$user.$hostname.conf";
+            if ( is_link( $link ) ) {
+                unlink( $link );
+            }
+            $link = "/etc/nginx/conf.d/domains/webdav-$user.$hostname.ssl.conf";
             if ( is_link( $link ) ) {
                 unlink( $link );
             }
