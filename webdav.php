@@ -123,4 +123,5 @@ if ( ! class_exists( 'WebDAV') ) {
         }
         
     }
+    new WebDAV();
 }
