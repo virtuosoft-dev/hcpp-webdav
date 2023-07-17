@@ -75,7 +75,9 @@ if ( ! class_exists( 'WebDAV') ) {
                 file_put_contents( $ssl_conf, $content );
 
                 // Generate website cert if it doesn't exist.
-                $hcpp->cg_pws->generate_website_cert( $user, "webdav-$user.$hostname" );
+                if ( !is_dir( "/home/$user/conf/web/webdav-$user.$hostname/ssl" ) ) {
+                    $hcpp->cg_pws->generate_website_cert( $user, "webdav-$user.$hostname" );
+                }
             }
 
             // Create the apache.conf file.
