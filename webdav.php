@@ -41,7 +41,7 @@ if ( ! class_exists( 'WebDAV') ) {
         // Setup WebDAV services for user
         public function setup( $user ) {
             global $hcpp;
-            $hostname = trim( $hcpp->delLeftMost( shell_exec( 'hostname -f' ), '.' ) );
+            $hostname = $hcpp->delLeftMost( $hcpp->getLeftMost( $_SERVER['HTTP_HOST'], ':' ), '.' );
 
             // Create the configuration folder
             if ( ! is_dir( "/home/$user/conf/web/webdav-$user.$hostname" ) ) {
@@ -115,7 +115,7 @@ if ( ! class_exists( 'WebDAV') ) {
         public function priv_delete_user( $args ) {
             global $hcpp;
             $user = $args[0];
-            $hostname = trim( $hcpp->delLeftMost( shell_exec( 'hostname -f' ), '.' ) );
+            $hostname = $hcpp->delLeftMost( $hcpp->getLeftMost( $_SERVER['HTTP_HOST'], ':' ), '.' );
             $link = "/etc/nginx/conf.d/domains/webdav-$user.$hostname.conf";
             if ( is_link( $link ) ) {
                 unlink( $link );
