@@ -20,12 +20,12 @@ if ( ! class_exists( 'WebDAV') ) {
             global $hcpp;
             $hcpp->webdav = $this;
             $hcpp->add_action( 'priv_unsuspend_domain', [ $this, 'priv_unsuspend_domain' ] );
-            $hcpp->add_action( 'new_web_domain_ready', [ $this, 'new_web_domain_ready' ] );
+            $hcpp->add_action( 'hcpp_new_domain_ready', [ $this, 'hcpp_new_domain_ready' ] );
             $hcpp->add_action( 'priv_delete_user', [ $this, 'priv_delete_user' ] );
         }
         
         // Trigger setup when domain is created.
-        public function new_web_domain_ready( $args ) {
+        public function hcpp_new_domain_ready( $args ) {
             $user = $args[0];
             $this->setup( $user );           
             return $args;
