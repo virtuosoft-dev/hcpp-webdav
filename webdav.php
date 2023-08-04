@@ -41,6 +41,7 @@ if ( ! class_exists( 'WebDAV') ) {
         // Setup WebDAV services for user
         public function setup( $user ) {
             global $hcpp;
+            $hcpp->log( "Setting up WebDAV for $user" );
             $domain = trim( shell_exec( 'hostname -d') );
 
             // Create the configuration folder
