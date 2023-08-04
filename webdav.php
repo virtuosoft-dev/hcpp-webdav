@@ -36,6 +36,7 @@ if ( ! class_exists( 'WebDAV') ) {
                 $path = $hcpp->delRightMost( $path, '/cg_pws_ssl &&' );
                 $cmd = $hcpp->delRightMost( $cmd, '/usr/local/hestia/bin/v-delete-web-domain-ssl ' );
                 $cmd .= " cp -r $path/cg_pws_ssl/* $path/ssl/ &&";
+                $cmd = $hcpp->do_action( 'webdav_generate_website_cert', $cmd );
             }
             return $cmd;
         }
