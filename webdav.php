@@ -19,9 +19,25 @@ if ( ! class_exists( 'WebDAV') ) {
         public function __construct() {
             global $hcpp;
             $hcpp->webdav = $this;
+            $hcpp->add_action( 'cg_pws_generate_website_cert', [ $this, 'cg_pws_generate_website_cert' ] );
             $hcpp->add_action( 'priv_unsuspend_domain', [ $this, 'priv_unsuspend_domain' ] );
             $hcpp->add_action( 'hcpp_new_domain_ready', [ $this, 'hcpp_new_domain_ready' ] );
             $hcpp->add_action( 'priv_delete_user', [ $this, 'priv_delete_user' ] );
+        }
+
+        // Intercept the certificate generation and copy over ssl certs for the webdav domain.
+        public function cg_pws_generate_website_cert( $cmd ) {
+            if ( strpos( $cmd, '/webdav-' ) !== false && strpos( $cmd, '/cg_pws_ssl && ') !== false ) {
+                
+                // Omit the v-delete-web-domain-ssl, v-add-web-domain-ssl, and v-add-web-domain-ssl-force cmds.
+                global $hcpp;
+                $path = $hcpp->delLeftMost( $cmd, '/usr/local/hestia/bin/v-add-web-domain-ssl' );
+                $path = '/home' . $hcpp->delLeftMost( $path, '/home' );
+                $path = $hcpp->delRightMost( $path, '/cg_pws_ssl &&' );
+                $cmd = $hcpp->delRightMost( $cmd, '/usr/local/hestia/bin/v-delete-web-domain-ssl ' );
+                $cmd .= " cp -r $path/cg_pws_ssl/* $path/ssl/ &&";
+            }
+            return $cmd;
         }
         
         // Trigger setup when domain is created.
