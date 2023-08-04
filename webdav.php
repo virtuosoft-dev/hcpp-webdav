@@ -77,7 +77,7 @@ if ( ! class_exists( 'WebDAV') ) {
 
                 // Generate website cert if it doesn't exist.
                 if ( !is_dir( "/home/$user/conf/web/webdav-$user.$domain/ssl" ) ) {
-                    $hcpp->cg_pws->generate_website_cert( $user, "webdav-$user.$domain" );
+                    $hcpp->cg_pws->generate_website_cert( $user, ["webdav-$user.$domain"] );
                 }
             }
 
