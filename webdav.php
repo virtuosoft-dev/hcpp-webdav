@@ -41,11 +41,11 @@ if ( ! class_exists( 'WebDAV') ) {
         // Setup WebDAV services for user
         public function setup( $user ) {
             global $hcpp;
-            $hostname = $hcpp->delLeftMost( $hcpp->getLeftMost( $_SERVER['HTTP_HOST'], ':' ), '.' );
+            $domain = trim( shell_exec( 'hostname -d') );
 
             // Create the configuration folder
-            if ( ! is_dir( "/home/$user/conf/web/webdav-$user.$hostname" ) ) {
-                mkdir( "/home/$user/conf/web/webdav-$user.$hostname" );
+            if ( ! is_dir( "/home/$user/conf/web/webdav-$user.$domain" ) ) {
+                mkdir( "/home/$user/conf/web/webdav-$user.$domain" );
             }
 
             // Get user account first IP address.
@@ -54,58 +54,58 @@ if ( ! class_exists( 'WebDAV') ) {
             );
 
             // Create the nginx.conf file.
-            $conf = "/home/$user/conf/web/webdav-$user.$hostname/nginx.conf";
+            $conf = "/home/$user/conf/web/webdav-$user.$domain/nginx.conf";
             $content = file_get_contents( __DIR__ . '/conf-web/nginx.conf' );
             $content = str_replace( 
-                ['%ip%', '%user%', '%hostname%'],
-                [$ip, $user, $hostname],
+                ['%ip%', '%user%', '%domain%'],
+                [$ip, $user, $domain],
                 $content
             );
             file_put_contents( $conf, $content );
 
             // Create the nginx.ssl.conf file.
             if ( property_exists( $hcpp, 'cg_pws' ) ) {
-                $ssl_conf = "/home/$user/conf/web/webdav-$user.$hostname/nginx.ssl.conf";
+                $ssl_conf = "/home/$user/conf/web/webdav-$user.$domain/nginx.ssl.conf";
                 $content = file_get_contents( __DIR__ . '/conf-web/nginx.ssl.conf' );
                 $content = str_replace( 
-                    ['%ip%', '%user%', '%hostname%'],
-                    [$ip, $user, $hostname],
+                    ['%ip%', '%user%', '%domain%'],
+                    [$ip, $user, $domain],
                     $content
                 );
                 file_put_contents( $ssl_conf, $content );
 
                 // Generate website cert if it doesn't exist.
-                if ( !is_dir( "/home/$user/conf/web/webdav-$user.$hostname/ssl" ) ) {
-                    $hcpp->cg_pws->generate_website_cert( $user, "webdav-$user.$hostname" );
+                if ( !is_dir( "/home/$user/conf/web/webdav-$user.$domain/ssl" ) ) {
+                    $hcpp->cg_pws->generate_website_cert( $user, "webdav-$user.$domain" );
                 }
             }
 
             // Create the apache.conf file.
-            $apache_conf = "/home/$user/conf/web/webdav-$user.$hostname/apache2.conf";
+            $apache_conf = "/home/$user/conf/web/webdav-$user.$domain/apache2.conf";
             $content = file_get_contents( __DIR__ . '/conf-web/apache.conf' );
             $content = str_replace(
-                ['%ip%', '%user%', '%hostname%'],
-                [$ip, $user, $hostname],
+                ['%ip%', '%user%', '%domain%'],
+                [$ip, $user, $domain],
                 $content
             );
             file_put_contents( $apache_conf, $content );
 
             // Create the nginx.conf configuration symbolic links.
-            $link = "/etc/nginx/conf.d/domains/webdav-$user.$hostname.conf";
+            $link = "/etc/nginx/conf.d/domains/webdav-$user.$domain.conf";
             if ( ! is_link( $link ) ) {
                 symlink( $conf, $link );
             }
 
             // Create the nginx.ssl.conf configuration symbolic links.
             if ( property_exists( $hcpp, 'cg_pws' ) ) {
-                $link = "/etc/nginx/conf.d/domains/webdav-$user.$hostname.ssl.conf";
+                $link = "/etc/nginx/conf.d/domains/webdav-$user.$domain.ssl.conf";
                 if ( ! is_link( $link ) ) {
                     symlink( $ssl_conf, $link );
                 }
             }
 
             // Create the apache.conf configuration symbolic links.
-            $link = "/etc/apache2/conf.d/domains/webdav-$user.$hostname.conf";
+            $link = "/etc/apache2/conf.d/domains/webdav-$user.$domain.conf";
             if ( ! is_link( $link ) ) {
                 symlink( $apache_conf, $link );
             }
