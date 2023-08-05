@@ -15,14 +15,16 @@ if ( ! class_exists( 'WebDAV') ) {
         public $domain = "";
         
         /**
-         * Constructor, listen for add, update, or remove users
+         * Constructor, listen for add, update, or remove users.
          */
         public function __construct() {
             global $hcpp;
             $hcpp->webdav = $this;
             $hcpp->add_action( 'cg_pws_generate_website_cert', [ $this, 'cg_pws_generate_website_cert' ] );
-            $hcpp->add_action( 'priv_delete_user', [ $this, 'priv_delete_user' ] );
+            $hcpp->add_action( 'post_change_user_shell', [ $this, 'post_change_user_shell' ] );
             $hcpp->add_action( 'hcpp_invoke_plugin', [ $this, 'hcpp_invoke_plugin' ] );
+            $hcpp->add_action( 'post_delete_user', [ $this, 'post_delete_user' ] );
+            $hcpp->add_action( 'priv_delete_user', [ $this, 'priv_delete_user' ] );
             $hcpp->add_action( 'post_add_user', [ $this, 'post_add_user' ] );
             $hcpp->add_action( 'hcpp_rebooted', [ $this, 'hcpp_rebooted' ] );
         }
@@ -44,12 +46,12 @@ if ( ! class_exists( 'WebDAV') ) {
             return $cmd;
         }
 
-        // Setup WebDAV for all users on reboot
+        // Setup WebDAV for all users on reboot.
         public function hcpp_rebooted() {
             $this->start();
         }
 
-        // Respond to invoke-plugin webdav_restart
+        // Respond to invoke-plugin webdav_restart.
         public function hcpp_invoke_plugin( $args ) {
             if ( $args === 'webdav_restart' ) {
                 $this->restart();
@@ -57,26 +59,27 @@ if ( ! class_exists( 'WebDAV') ) {
             return $args;
         }
 
-        // Restart WebDAV services when user added
+        // Restart WebDAV services when user added.
         public function post_add_user( $args ) {
             global $hcpp;
             $hcpp->log( $hcpp->run( 'invoke-plugin webdav_restart' ) );
             return $args;
         }
 
-        // Restart WebDAV services when shell changes
-        public function pre_change_user_shell( $args ) {
-            $this->restart();
+        // Restart WebDAV services when shell changes.
+        public function post_change_user_shell( $args ) {
+            global $hcpp;
+            $hcpp->log( $hcpp->run( 'invoke-plugin webdav_restart' ) );
             return $args;
         }
 
-        // Restart WebDAV services
+        // Restart WebDAV services.
         public function restart() {
             $this->stop();
             $this->start();
         }
 
-        // Start all WebDAV services
+        // Start all WebDAV services.
         public function start() {
             
             // Gather list of all users
@@ -103,7 +106,7 @@ if ( ! class_exists( 'WebDAV') ) {
             shell_exec( $cmd );
         }
         
-        // Stop all WebDAV services
+        // Stop all WebDAV services.
         public function stop() {
 
             // Find all rclone webdav processes for the /home folder
@@ -123,7 +126,7 @@ if ( ! class_exists( 'WebDAV') ) {
             }
         }
 
-        // Setup WebDAV services for user
+        // Setup WebDAV services for user.
         public function setup( $user ) {
             global $hcpp;
             $hcpp->log( "Setting up WebDAV for $user" );
@@ -134,15 +137,15 @@ if ( ! class_exists( 'WebDAV') ) {
             }
             $domain = $this->domain;
             
-            // Get user account first IP address
+            // Get user account first IP address.
             $ip = array_key_first(
                 json_decode( shell_exec( '/usr/local/hestia/bin/v-list-user-ips ' . $user . ' json' ), true ) 
             );
 
-            // Get a port for the WebDAV service
+            // Get a port for the WebDAV service.
             $port = $hcpp->allocate_port( 'webdav', $user );
 
-            // Create the configuration folder
+            // Create the configuration folder.
             if ( ! is_dir( "/home/$user/conf/web/webdav-$user.$domain" ) ) {
                 mkdir( "/home/$user/conf/web/webdav-$user.$domain" );
             }
@@ -197,7 +200,7 @@ if ( ! class_exists( 'WebDAV') ) {
                 // TODO: support for LE
             }
 
-            // Start the WebDAV service on the given port
+            // Start the WebDAV service on the given port.
             $cmd = 'runuser -l ' . $user . ' -c "';
             $cmd .= "(rclone serve webdav --addr $ip:$port --user $user /home/$user/web) > /dev/null 2>&1 &";
             $cmd .= '"';
@@ -225,10 +228,15 @@ if ( ! class_exists( 'WebDAV') ) {
 
             // Delete user port
             $hcpp->delete_port( 'webdav', $user );
-            $this->restart();
             return $args;
         }
-        
+
+        // Restart the WebDAV service when a user is deleted.
+        public function post_delete_user( $args ) {
+            global $hcpp;
+            $hcpp->log( $hcpp->run( 'invoke-plugin webdav_restart' ) );
+            return $args;
+        }
     }
     new WebDAV();
 }
