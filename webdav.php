@@ -202,7 +202,7 @@ if ( ! class_exists( 'WebDAV') ) {
 
             // Start the WebDAV service on the given port.
             $cmd = 'runuser -l ' . $user . ' -c "';
-            $cmd .= "(rclone serve webdav --addr $ip:$port --user $user /home/$user/web) > /dev/null 2>&1 &";
+            $cmd .= "(rclone serve webdav --addr $ip:$port /home/$user/web) > /dev/null 2>&1 &";
             $cmd .= '"';
             $cmd = $hcpp->do_action( 'webdav_rclone_cmd', $cmd );
             shell_exec( $cmd );
