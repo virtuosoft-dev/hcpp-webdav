@@ -1,12 +1,8 @@
 #!/bin/bash
 export DEBIAN_FRONTEND=noninteractive
 
-############################################ 
-# Enable Apache WebDAV modules
-############################################
-a2enmod dav
-a2enmod dav_fs
-systemctl restart apache2.service
+# Install rclone for WebDAV support
+apt-get install -y rclone
 
 # Notify installation has finished
 /usr/local/hestia/bin/v-add-user-notification admin WebDAV "<span>&#128194;</span> WebDAV plugin has finished installing."
