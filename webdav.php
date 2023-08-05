@@ -53,7 +53,7 @@ if ( ! class_exists( 'WebDAV') ) {
 
         // Respond to invoke-plugin webdav_restart.
         public function hcpp_invoke_plugin( $args ) {
-            if ( $args === 'webdav_restart' ) {
+            if ( $args[0] === 'webdav_restart' ) {
                 $this->restart();
             }
             return $args;
