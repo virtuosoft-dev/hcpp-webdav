@@ -181,6 +181,12 @@ if ( ! class_exists( 'WebDAV') ) {
                     $hcpp->cg_pws->generate_website_cert( $user, ["webdav-$user.$domain"] );
                 }
             }else{
+
+                // Force SSL on non-Personal Web Server edition.
+                $force_ssl_conf = "/home/$user/conf/web/webdav-$user.$domain/nginx.forcessl.conf";
+                $content = "return 301 https://$host$request_uri;";
+                file_put_contents( $force_ssl_conf, $content );
+
                 // TODO: support for LE
             }
 
@@ -199,6 +205,8 @@ if ( ! class_exists( 'WebDAV') ) {
             }else{
                 // TODO: support for LE
             }
+
+            
 
             // Start the WebDAV service on the given port.
             $cmd = 'runuser -l ' . $user . ' -c "';
