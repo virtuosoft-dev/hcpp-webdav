@@ -12,6 +12,7 @@
 
 if ( ! class_exists( 'WebDAV') ) {
     class WebDAV {
+        public $domain = "";
         
         /**
          * Constructor, listen for add, update, or remove users
@@ -20,10 +21,12 @@ if ( ! class_exists( 'WebDAV') ) {
             global $hcpp;
             $hcpp->webdav = $this;
             $hcpp->add_action( 'cg_pws_generate_website_cert', [ $this, 'cg_pws_generate_website_cert' ] );
-            $hcpp->add_action( 'priv_unsuspend_domain', [ $this, 'priv_unsuspend_domain' ] );
-            $hcpp->add_action( 'hcpp_new_domain_ready', [ $this, 'hcpp_new_domain_ready' ] );
             $hcpp->add_action( 'priv_delete_user', [ $this, 'priv_delete_user' ] );
+            $hcpp->add_action( 'hcpp_invoke_plugin', [ $this, 'hcpp_invoke_plugin' ] );
+            $hcpp->add_action( 'post_add_user', [ $this, 'post_add_user' ] );
+            $hcpp->add_action( 'hcpp_rebooted', [ $this, 'hcpp_rebooted' ] );
         }
+
 
         // Intercept the certificate generation and copy over ssl certs for the webdav domain.
         public function cg_pws_generate_website_cert( $cmd ) {
@@ -40,43 +43,121 @@ if ( ! class_exists( 'WebDAV') ) {
             }
             return $cmd;
         }
-        
-        // Trigger setup when domain is created.
-        public function hcpp_new_domain_ready( $args ) {
-            $user = $args[0];
-            $this->setup( $user );           
+
+        // Setup WebDAV for all users on reboot
+        public function hcpp_rebooted() {
+            $this->start();
+        }
+
+        // Respond to invoke-plugin webdav_restart
+        public function hcpp_invoke_plugin( $args ) {
+            if ( $args === 'webdav_restart' ) {
+                $this->restart();
+            }
             return $args;
         }
 
-        // On domain unsuspend, re-run setup
-        public function priv_unsuspend_domain( $args ) {
-            $user = $args[0];
-            $this->setup( $user );           
+        // Restart WebDAV services when user added
+        public function post_add_user( $args ) {
+            global $hcpp;
+            $hcpp->log( $hcpp->run( 'invoke-plugin webdav_restart' ) );
             return $args;
         }
+
+        // Restart WebDAV services when shell changes
+        public function pre_change_user_shell( $args ) {
+            $this->restart();
+            return $args;
+        }
+
+        // Restart WebDAV services
+        public function restart() {
+            $this->stop();
+            $this->start();
+        }
+
+        // Start all WebDAV services
+        public function start() {
+            
+            // Gather list of all users
+            $cmd = "/usr/local/hestia/bin/v-list-users json";
+            $result = shell_exec( $cmd );
+            try {
+                $result = json_decode( $result, true, 512, JSON_THROW_ON_ERROR );
+            } catch (Exception $e) {
+                var_dump( $e );
+                return;
+            }
+            
+            // Setup WebDAV for each valid user
+            foreach( $result as $key=> $value ) {
+                if ( $key === 'admin') continue;
+                if ( $value['SHELL'] !== 'bash' ) continue;
+                $this->setup( $key );
+            }
+
+            // Reload nginx
+            global $hcpp;
+            $cmd = '(service nginx reload) > /dev/null 2>&1 &';
+            $cmd = $hcpp->do_action( 'webdav_nginx_reload', $cmd );
+            shell_exec( $cmd );
+        }
         
+        // Stop all WebDAV services
+        public function stop() {
+
+            // Find all rclone webdav processes for the /home folder
+            $cmd = 'ps ax | grep "rclone serve webdav" | grep "/home" | grep -v grep';
+            exec($cmd, $processes);
+
+            // Loop through each process and extract the process ID (PID) using awk
+            foreach ($processes as $process) {
+                $pid = preg_replace('/^\s*(\d+).*$/', '$1', $process);
+
+                // Kill the process
+                $kill = "kill $pid";
+                exec($kill, $output, $returnValue);
+
+                global $hcpp;
+                $hcpp->log( "Killed rclone webdav process $pid" );
+            }
+        }
+
         // Setup WebDAV services for user
         public function setup( $user ) {
             global $hcpp;
             $hcpp->log( "Setting up WebDAV for $user" );
-            $domain = trim( shell_exec( 'hostname -d') );
+
+            // Get the domain
+            if ( $this->domain === "" ) {
+                $this->domain = trim( shell_exec( 'hostname -d') );
+            }
+            $domain = $this->domain;
+            
+            // Get user account first IP address
+            $ip = array_key_first(
+                json_decode( shell_exec( '/usr/local/hestia/bin/v-list-user-ips ' . $user . ' json' ), true ) 
+            );
+
+            // Get a port for the WebDAV service
+            $port = $hcpp->allocate_port( 'webdav', $user );
 
             // Create the configuration folder
             if ( ! is_dir( "/home/$user/conf/web/webdav-$user.$domain" ) ) {
                 mkdir( "/home/$user/conf/web/webdav-$user.$domain" );
             }
 
-            // Get user account first IP address.
-            $ip = array_key_first(
-                json_decode( shell_exec( '/usr/local/hestia/bin/v-list-user-ips ' . $user . ' json' ), true ) 
-            );
+            // Create the password file.
+            $pw_hash = trim( shell_exec( "sudo grep '^$user:' /etc/shadow" ) );
+            $pw_hash = $hcpp->delLeftMost( $pw_hash, "$user:" );
+            file_put_contents( "/home/$user/conf/web/webdav-$user.$domain/.htpasswd", $pw_hash );
 
             // Create the nginx.conf file.
             $conf = "/home/$user/conf/web/webdav-$user.$domain/nginx.conf";
             $content = file_get_contents( __DIR__ . '/conf-web/nginx.conf' );
             $content = str_replace( 
-                ['%ip%', '%user%', '%domain%'],
-                [$ip, $user, $domain],
+                ['%ip%', '%user%', '%domain%', '%port%'],
+                [$ip, $user, $domain, $port],
                 $content
             );
             file_put_contents( $conf, $content );
@@ -86,8 +167,8 @@ if ( ! class_exists( 'WebDAV') ) {
                 $ssl_conf = "/home/$user/conf/web/webdav-$user.$domain/nginx.ssl.conf";
                 $content = file_get_contents( __DIR__ . '/conf-web/nginx.ssl.conf' );
                 $content = str_replace( 
-                    ['%ip%', '%user%', '%domain%'],
-                    [$ip, $user, $domain],
+                    ['%ip%', '%user%', '%domain%', '%port%'],
+                    [$ip, $user, $domain, $port],
                     $content
                 );
                 file_put_contents( $ssl_conf, $content );
@@ -96,17 +177,9 @@ if ( ! class_exists( 'WebDAV') ) {
                 if ( !is_dir( "/home/$user/conf/web/webdav-$user.$domain/ssl" ) ) {
                     $hcpp->cg_pws->generate_website_cert( $user, ["webdav-$user.$domain"] );
                 }
+            }else{
+                // TODO: support for LE
             }
-
-            // Create the apache.conf file.
-            $apache_conf = "/home/$user/conf/web/webdav-$user.$domain/apache2.conf";
-            $content = file_get_contents( __DIR__ . '/conf-web/apache.conf' );
-            $content = str_replace(
-                ['%ip%', '%user%', '%domain%'],
-                [$ip, $user, $domain],
-                $content
-            );
-            file_put_contents( $apache_conf, $content );
 
             // Create the nginx.conf configuration symbolic links.
             $link = "/etc/nginx/conf.d/domains/webdav-$user.$domain.conf";
@@ -120,13 +193,14 @@ if ( ! class_exists( 'WebDAV') ) {
                 if ( ! is_link( $link ) ) {
                     symlink( $ssl_conf, $link );
                 }
+            }else{
+                // TODO: support for LE
             }
 
-            // Create the apache.conf configuration symbolic links.
-            $link = "/etc/apache2/conf.d/domains/webdav-$user.$domain.conf";
-            if ( ! is_link( $link ) ) {
-                symlink( $apache_conf, $link );
-            }
+            // Start the WebDAV service on the given port
+            $cmd = "(rclone serve webdav --addr $ip:$port --user $user /home/$user/web) > /dev/null 2>&1 &";
+            $cmd = $hcpp->do_action( 'webdav_rclone_cmd', $cmd );
+            shell_exec( $cmd );
         }
 
         // Delete the NGINX configuration reference and server when the user is deleted.
@@ -146,6 +220,10 @@ if ( ! class_exists( 'WebDAV') ) {
             if ( is_link( $link ) ) {
                 unlink( $link );
             }
+
+            // Delete user port
+            $hcpp->delete_port( 'webdav', $user );
+            $this->restart();
             return $args;
         }
         
