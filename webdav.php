@@ -206,8 +206,6 @@ if ( ! class_exists( 'WebDAV') ) {
                 // TODO: support for LE
             }
 
-            
-
             // Start the WebDAV service on the given port.
             $cmd = 'runuser -l ' . $user . ' -c "';
             $cmd .= "(rclone serve webdav --addr $ip:$port /home/$user/web) > /dev/null 2>&1 &";
@@ -220,16 +218,21 @@ if ( ! class_exists( 'WebDAV') ) {
         public function priv_delete_user( $args ) {
             global $hcpp;
             $user = $args[0];
-            $hostname = $hcpp->delLeftMost( $hcpp->getLeftMost( $_SERVER['HTTP_HOST'], ':' ), '.' );
-            $link = "/etc/nginx/conf.d/domains/webdav-$user.$hostname.conf";
+
+            // Get the domain
+            if ( $this->domain === "" ) {
+                $this->domain = trim( shell_exec( 'hostname -d') );
+            }
+            $domain = $this->domain;
+            $link = "/etc/nginx/conf.d/domains/webdav-$user.$domain.conf";
             if ( is_link( $link ) ) {
                 unlink( $link );
             }
-            $link = "/etc/nginx/conf.d/domains/webdav-$user.$hostname.ssl.conf";
+            $link = "/etc/nginx/conf.d/domains/webdav-$user.$domain.ssl.conf";
             if ( is_link( $link ) ) {
                 unlink( $link );
             }
-            $link = "/etc/apache2/conf.d/domains/webdav-$user.$hostname.conf";
+            $link = "/etc/apache2/conf.d/domains/webdav-$user.$domain.conf";
             if ( is_link( $link ) ) {
                 unlink( $link );
             }
