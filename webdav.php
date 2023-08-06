@@ -152,7 +152,6 @@ if ( ! class_exists( 'WebDAV') ) {
 
             // Create the password file.
             $pw_hash = trim( shell_exec( "sudo grep '^$user:' /etc/shadow" ) );
-            $pw_hash = $hcpp->delLeftMost( $pw_hash, "$user:" );
             file_put_contents( "/home/$user/conf/web/webdav-$user.$domain/.htpasswd", $pw_hash );
 
             // Create the nginx.conf file.
