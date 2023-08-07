@@ -12,7 +12,6 @@
 
 if ( ! class_exists( 'WebDAV') ) {
     class WebDAV {
-        public $domain = "";
         
         /**
          * Constructor, listen for add, update, or remove users.
@@ -132,10 +131,10 @@ if ( ! class_exists( 'WebDAV') ) {
             $hcpp->log( "Setting up WebDAV for $user" );
 
             // Get the domain
-            if ( $this->domain === "" ) {
-                $this->domain = trim( shell_exec( 'hostname -d') );
+            if ( ! property_exists( $hcpp, 'domain' ) ) {
+                $hcpp->domain = trim( shell_exec( 'hostname -d' ) );
             }
-            $domain = $this->domain;
+            $domain = $hcpp->domain;
             
             // Get user account first IP address.
             $ip = array_key_first(
