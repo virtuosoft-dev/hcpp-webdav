@@ -201,13 +201,9 @@ if ( ! class_exists( 'WebDAV') ) {
             }
 
             // Create the nginx.ssl.conf configuration symbolic links.
-            if ( property_exists( $hcpp, 'cg_pws' ) ) {
-                $link = "/etc/nginx/conf.d/domains/webdav-$user.$domain.ssl.conf";
-                if ( ! is_link( $link ) ) {
-                    symlink( $ssl_conf, $link );
-                }
-            }else{
-                // TODO: support for LE
+            $link = "/etc/nginx/conf.d/domains/webdav-$user.$domain.ssl.conf";
+            if ( ! is_link( $link ) ) {
+                symlink( $ssl_conf, $link );
             }
 
             // Start the WebDAV service on the given port.
