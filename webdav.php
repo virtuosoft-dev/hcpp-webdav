@@ -188,7 +188,7 @@ if ( ! class_exists( 'WebDAV') ) {
 
                 // Force SSL on non-Personal Web Server edition.
                 $force_ssl_conf = "/home/$user/conf/web/webdav-$user.$domain/nginx.forcessl.conf";
-                $content = "return 301 https://$host$request_uri;";
+                $content = "return 301 https://\$host\$request_uri;";
                 file_put_contents( $force_ssl_conf, $content );
 
                 // TODO: support for LE
