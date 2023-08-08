@@ -58,6 +58,17 @@ if ( ! class_exists( 'WebDAV') ) {
             return $args;
         }
 
+        // Get the base domain; cache it for future use.
+        public function get_base_domain() {
+            global $hcpp;
+
+            // Get the domain.
+            if ( ! property_exists( $hcpp, 'domain' ) ) {
+                $hcpp->domain = trim( shell_exec( 'hostname -d' ) );
+            }
+            return $hcpp->domain;
+        }
+
         // Restart WebDAV services when user added.
         public function post_add_user( $args ) {
             global $hcpp;
@@ -129,12 +140,7 @@ if ( ! class_exists( 'WebDAV') ) {
         public function setup( $user ) {
             global $hcpp;
             $hcpp->log( "Setting up WebDAV for $user" );
-
-            // Get the domain
-            if ( ! property_exists( $hcpp, 'domain' ) ) {
-                $hcpp->domain = trim( shell_exec( 'hostname -d' ) );
-            }
-            $domain = $hcpp->domain;
+            $domain = $this->get_base_domain();
             
             // Get user account first IP address.
             $ip = array_key_first(
@@ -216,12 +222,7 @@ if ( ! class_exists( 'WebDAV') ) {
         public function priv_delete_user( $args ) {
             global $hcpp;
             $user = $args[0];
-
-            // Get the domain
-            if ( $this->domain === "" ) {
-                $this->domain = trim( shell_exec( 'hostname -d') );
-            }
-            $domain = $this->domain;
+            $domain = $this->get_base_domain();
             $link = "/etc/nginx/conf.d/domains/webdav-$user.$domain.conf";
             if ( is_link( $link ) ) {
                 unlink( $link );
