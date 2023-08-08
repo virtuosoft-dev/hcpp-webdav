@@ -156,7 +156,7 @@ if ( ! class_exists( 'WebDAV') ) {
             }
 
             // Create the password file.
-            $pw_hash = trim( shell_exec( "sudo grep '^$user:' /etc/shadow" ) );
+            $pw_hash = trim( shell_exec( "grep '^$user:' /etc/shadow" ) );
             file_put_contents( "/home/$user/conf/web/webdav-$user.$domain/.htpasswd", $pw_hash );
 
             // Create the nginx.conf file.
@@ -170,17 +170,17 @@ if ( ! class_exists( 'WebDAV') ) {
             file_put_contents( $conf, $content );
 
             // Create the nginx.ssl.conf file.
-            if ( property_exists( $hcpp, 'cg_pws' ) ) {
-                $ssl_conf = "/home/$user/conf/web/webdav-$user.$domain/nginx.ssl.conf";
-                $content = file_get_contents( __DIR__ . '/conf-web/nginx.ssl.conf' );
-                $content = str_replace( 
-                    ['%ip%', '%user%', '%domain%', '%port%'],
-                    [$ip, $user, $domain, $port],
-                    $content
-                );
-                file_put_contents( $ssl_conf, $content );
+            $ssl_conf = "/home/$user/conf/web/webdav-$user.$domain/nginx.ssl.conf";
+            $content = file_get_contents( __DIR__ . '/conf-web/nginx.ssl.conf' );
+            $content = str_replace( 
+                ['%ip%', '%user%', '%domain%', '%port%'],
+                [$ip, $user, $domain, $port],
+                $content
+            );
+            file_put_contents( $ssl_conf, $content );
 
-                // Generate website cert if it doesn't exist.
+            // Generate website cert if it doesn't exist for Personal Web Server edition.
+            if ( property_exists( $hcpp, 'cg_pws' ) ) {
                 if ( !is_dir( "/home/$user/conf/web/webdav-$user.$domain/ssl" ) ) {
                     $hcpp->cg_pws->generate_website_cert( $user, ["webdav-$user.$domain"] );
                 }
