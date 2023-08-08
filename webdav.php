@@ -123,7 +123,7 @@ if ( ! class_exists( 'WebDAV') ) {
             $cmd = 'ps ax | grep "rclone serve webdav" | grep "/home" | grep -v grep';
             exec($cmd, $processes);
 
-            // Loop through each process and extract the process ID (PID) using awk
+            // Loop through each process and extract the process ID (PID)
             foreach ($processes as $process) {
                 $pid = preg_replace('/^\s*(\d+).*$/', '$1', $process);
 
