@@ -120,9 +120,9 @@ if ( ! class_exists( 'WebDAV') ) {
                 $this->setup( $key );
             }
 
-            // Reload nginx
+            // Restart nginx
             global $hcpp;
-            $cmd = '(service nginx reload) > /dev/null 2>&1 &';
+            $cmd = '(service nginx restart) > /dev/null 2>&1 &';
             $cmd = $hcpp->do_action( 'webdav_nginx_reload', $cmd );
             shell_exec( $cmd );
         }
@@ -145,6 +145,12 @@ if ( ! class_exists( 'WebDAV') ) {
                 global $hcpp;
                 $hcpp->log( "Killed rclone webdav process $pid" );
             }
+
+            // Remove service link and reload nginx
+            global $hcpp;
+            $cmd = '(rm -f /etc/nginx/conf.d/domains/webdav-* ; service nginx restart) > /dev/null 2>&1 &';
+            $cmd = $hcpp->do_action( 'webdav_nginx_restart', $cmd );
+            shell_exec( $cmd );
         }
 
         // Setup WebDAV services for user.
@@ -235,10 +241,6 @@ if ( ! class_exists( 'WebDAV') ) {
                 unlink( $link );
             }
             $link = "/etc/nginx/conf.d/domains/webdav-$user.$domain.ssl.conf";
-            if ( is_link( $link ) ) {
-                unlink( $link );
-            }
-            $link = "/etc/apache2/conf.d/domains/webdav-$user.$domain.conf";
             if ( is_link( $link ) ) {
                 unlink( $link );
             }
