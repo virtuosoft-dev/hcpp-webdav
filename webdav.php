@@ -132,15 +132,14 @@ if ( ! class_exists( 'WebDAV') ) {
 
             // Find all rclone webdav processes for the /home folder
             $cmd = 'ps ax | grep "rclone serve webdav" | grep "/home" | grep -v grep';
-            exec($cmd, $processes);
+            $processes = explode( PHP_EOL, shell_exec( $cmd ) );
 
             // Loop through each process and extract the process ID (PID)
             foreach ($processes as $process) {
                 $pid = preg_replace('/^\s*(\d+).*$/', '$1', $process);
 
                 // Kill the process
-                $kill = "kill $pid";
-                exec($kill, $output, $returnValue);
+                shell_exec( "kill $pid" );
 
                 global $hcpp;
                 $hcpp->log( "Killed rclone webdav process $pid" );
