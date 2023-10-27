@@ -2,7 +2,7 @@
 export DEBIAN_FRONTEND=noninteractive
 
 # Remove rclone
-apt-get remove -y rclone
+# apt-get remove -y rclone # Rclone is apart of HestiaCP, don't remove it
 
 # Clean up all webdav users
 rm -rf /etc/nginx/conf.d/domains/webdav-*
