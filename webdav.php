@@ -31,13 +31,15 @@ if ( ! class_exists( 'WebDAV') ) {
         }
 
         // Stop services on plugin disabled.
-        public function hcpp_plugin_disabled() {
-            $this->stop();
+        public function hcpp_plugin_disabled( $plugin ) {
+            if ( $plugin === 'webdav') $this->stop();
+            return $plugin;
         }
 
         // Start services on plugin enabled.
-        public function hcpp_plugin_enabled() {
-            $this->start();
+        public function hcpp_plugin_enabled( $plugin ) {
+            if ( $plugin == 'webdav' ) $this->start();
+            return $plugin;
         }
 
         // Intercept the certificate generation and copy over ssl certs for the webdav domain.
