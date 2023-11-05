@@ -19,7 +19,7 @@ if ( ! class_exists( 'WebDAV') ) {
         public function __construct() {
             global $hcpp;
             $hcpp->webdav = $this;
-            $hcpp->add_action( 'cg_pws_generate_website_cert', [ $this, 'cg_pws_generate_website_cert' ] );
+            $hcpp->add_action( 'dev_pw_generate_website_cert', [ $this, 'dev_pw_generate_website_cert' ] );
             $hcpp->add_action( 'post_change_user_shell', [ $this, 'post_change_user_shell' ] );
             $hcpp->add_action( 'hcpp_invoke_plugin', [ $this, 'hcpp_invoke_plugin' ] );
             $hcpp->add_action( 'post_delete_user', [ $this, 'post_delete_user' ] );
@@ -43,16 +43,16 @@ if ( ! class_exists( 'WebDAV') ) {
         }
 
         // Intercept the certificate generation and copy over ssl certs for the webdav domain.
-        public function cg_pws_generate_website_cert( $cmd ) {
-            if ( strpos( $cmd, '/webdav-' ) !== false && strpos( $cmd, '/cg_pws_ssl && ') !== false ) {
+        public function dev_pw_generate_website_cert( $cmd ) {
+            if ( strpos( $cmd, '/webdav-' ) !== false && strpos( $cmd, '/dev_pw_ssl && ') !== false ) {
                 
                 // Omit the v-delete-web-domain-ssl, v-add-web-domain-ssl, and v-add-web-domain-ssl-force cmds.
                 global $hcpp;
                 $path = $hcpp->delLeftMost( $cmd, '/usr/local/hestia/bin/v-add-web-domain-ssl' );
                 $path = '/home' . $hcpp->delLeftMost( $path, '/home' );
-                $path = $hcpp->delRightMost( $path, '/cg_pws_ssl &&' );
+                $path = $hcpp->delRightMost( $path, '/dev_pw_ssl &&' );
                 $cmd = $hcpp->delRightMost( $cmd, '/usr/local/hestia/bin/v-delete-web-domain-ssl ' );
-                $cmd .= " mkdir -p $path/ssl ; cp -r $path/cg_pws_ssl/* $path/ssl ";
+                $cmd .= " mkdir -p $path/ssl ; cp -r $path/dev_pw_ssl/* $path/ssl ";
                 $cmd = $hcpp->do_action( 'webdav_generate_website_cert', $cmd );
             }
             return $cmd;
@@ -197,14 +197,14 @@ if ( ! class_exists( 'WebDAV') ) {
             );
             file_put_contents( $ssl_conf, $content );
 
-            // Generate website cert if it doesn't exist for Personal Web Server edition.
-            if ( property_exists( $hcpp, 'cg_pws' ) ) {
+            // Generate website cert if it doesn't exist for Devstia Preview edition.
+            if ( property_exists( $hcpp, 'dev_pw' ) ) {
                 if ( !is_dir( "/home/$user/conf/web/webdav-$user.$domain/ssl" ) ) {
-                    $hcpp->cg_pws->generate_website_cert( $user, ["webdav-$user.$domain"] );
+                    $hcpp->dev_pw->generate_website_cert( $user, ["webdav-$user.$domain"] );
                 }
             }else{
 
-                // Force SSL on non-Personal Web Server edition.
+                // Force SSL on non-Devstia Preview edition.
                 $force_ssl_conf = "/home/$user/conf/web/webdav-$user.$domain/nginx.forcessl.conf";
                 $content = "return 301 https://\$host\$request_uri;";
                 file_put_contents( $force_ssl_conf, $content );
