@@ -197,14 +197,14 @@ if ( ! class_exists( 'WebDAV') ) {
             );
             file_put_contents( $ssl_conf, $content );
 
-            // Generate website cert if it doesn't exist for Devstia Preview edition.
+            // Generate website cert if it doesn't exist for Devstia Personal Web edition.
             if ( property_exists( $hcpp, 'dev_pw' ) ) {
                 if ( !is_dir( "/home/$user/conf/web/webdav-$user.$domain/ssl" ) ) {
                     $hcpp->dev_pw->generate_website_cert( $user, ["webdav-$user.$domain"] );
                 }
             }else{
 
-                // Force SSL on non-Devstia Preview edition.
+                // Force SSL on non-Devstia Personal Web edition.
                 $force_ssl_conf = "/home/$user/conf/web/webdav-$user.$domain/nginx.forcessl.conf";
                 $content = "return 301 https://\$host\$request_uri;";
                 file_put_contents( $force_ssl_conf, $content );
